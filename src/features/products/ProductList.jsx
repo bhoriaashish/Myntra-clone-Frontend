@@ -23,6 +23,9 @@ import {
 import Sort from '@mui/icons-material/Sort';
 import Close from '@mui/icons-material/Close';
 import { color } from '@mui/system';
+import { useDispatch, useSelector } from 'react-redux';
+import axios from 'axios';
+import { addToCart } from "../cart/CartSlice"
 
 function ProductList() {
   const [products, setProducts] = useState([]);
@@ -32,6 +35,8 @@ function ProductList() {
   const [priceRange, setPriceRange] = useState([0, 10000]);
   const [selectedBrands, setSelectedBrands] = useState([]);
   const [activeFilters, setActiveFilters] = useState(0);
+  const dispatch = useDispatch();
+  const { items } = useSelector(state => state.cart);
 
   // Sample filter data
   const brands = [
@@ -81,6 +86,49 @@ function ProductList() {
     };
     fetchProducts();
   }, []);
+
+  const addToBag = async (product) => 
+  {
+    try {
+      let data = JSON.stringify({
+        "productId": product._id,
+        "quantity": "1"
+      });
+
+      let config = {
+        method: 'post',
+        url: 'http://localhost:8080/api/cart',
+        headers: { 
+          'Content-Type': 'application/json', 
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
+        },
+        data : data
+      };
+
+      axios.request(config)
+      .then((response) => {
+        console.log(JSON.stringify(response.data));
+        if (response.status == 200) dispatch(addToCart(product));
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+
+
+
+
+      // const res = await axios.post('http://localhost:8080/api/cart',
+      // {
+      //   productId: product._id,
+      //   quantity: 1
+      // },
+      // {"Authorization" : localStorage.getItem('token')});
+
+      // dispatch(addToCart(product));
+    } catch (err) {
+      console.log("Error adding to cart : ", err);
+    }
+  }
 
   const toggleBrand = (brand) => {
     const newSelected = selectedBrands.includes(brand)
@@ -283,50 +331,59 @@ function ProductList() {
           ) : (
             <Grid container spacing={2}>
               {products.map((product) => (
-                <Grid item xs={6} sm={4} md={3} lg={2} key={product._id}>
-                  <Card className="relative hover:shadow-md transition-shadow">
-                    {/* Product Image */}
+                  <Grid item xs={6} sm={4} md={3} lg={2} key={product._id}>
+                    <Card className="relative hover:shadow-md transition-shadow">
                     <Link to={`/products/${product._id}`}>
-                      <CardMedia
-                        component="img"
-                        height="200"
-                        image={product.images?.[0] || '/placeholder-image.jpg'}
-                        alt={product.name}
-                        className="object-cover h-48"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = '/placeholder-image.jpg';
-                        }}
-                      />
-                    </Link>
+                      {/* Product Image */}
+                      
+                        {/* <CardMedia
+                          component="img"
+                          height="200"
+                          image={product.images?.[0] || '/placeholder-image.jpg'}
+                          alt={product.name}
+                          className="object-cover h-48"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = '/placeholder-image.jpg';
+                          }}
+                        /> */}
+                      
 
-                    {/* Product Info */}
-                    <CardContent className="p-2">
-                      <Typography 
-                        variant="body2" 
-                        className="font-medium line-clamp-2 text-sm h-10 mb-1"
-                      >
-                        {product.name}
-                      </Typography>
-                      <div className="flex items-center">
-                        <Typography variant="subtitle2" className="font-bold mr-1">
-                          Rs. {product.price}
-                        </Typography>
+                      {/* Product Info */}
+                      <CardContent className="p-2">
                         <Typography 
-                          variant="caption" 
-                          className="line-through text-gray-500 mr-1"
+                          variant="body2" 
+                          className="font-medium line-clamp-2 text-sm h-10 mb-1"
                         >
-                          Rs. {Math.round(product.price * 1.5)}
+                          {product.name}
                         </Typography>
-                        <Chip
-                          label={`${Math.floor(Math.random() * 70) + 10}% OFF`}
-                          size="small"
-                          className="bg-pink-100 text-pink-600 text-xs"
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Grid>
+                        <div className="flex items-center">
+                          <Typography variant="subtitle2" className="font-bold mr-1">
+                            Rs. {product.price}
+                          </Typography>
+                          <Typography 
+                            variant="caption" 
+                            className="line-through text-gray-500 mr-1"
+                          >
+                            Rs. {Math.round(product.price * 1.5)}
+                          </Typography>
+                          <Chip
+                            label={`${Math.floor(Math.random() * 70) + 10}% OFF`}
+                            size="small"
+                            className="bg-pink-100 text-pink-600 text-xs"
+                          />
+                        </div>
+                      </CardContent>
+                      </Link>
+                        <div>
+                          <Button 
+                            onClick={()=>addToBag(product)}
+                          >
+                            Add To Bag
+                          </Button>
+                        </div>
+                    </Card>
+                  </Grid>
               ))}
             </Grid>
           )}

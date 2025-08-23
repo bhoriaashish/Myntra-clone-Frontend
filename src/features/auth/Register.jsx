@@ -9,11 +9,13 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { Navigation, Visibility, VisibilityOff } from '@mui/icons-material';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const Register = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { loading, error, success } = useSelector(state => state.auth.signup);
 
   const [formData, setFormData] = useState({
@@ -44,7 +46,8 @@ const Register = () => {
       });
 
       dispatch(signupSuccess(res.data.user));
-      localStorage.setItem('token', res.data.token);
+      navigate('/login');
+
     } catch (err) {
       dispatch(signupFailure(err.response?.data?.message || 'Registration failed'));
     }
